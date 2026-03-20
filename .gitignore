@@ -102,7 +102,7 @@ Desktop.ini
 .LSOverride
 
 # Large media files (videos should be hosted separately)
-*.mp4
+# *.mp4  ← hero.mp4 is committed for local dev fallback
 *.mov
 *.avi
 *.mkv
