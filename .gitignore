@@ -4,7 +4,7 @@ node_modules/
 .yarn-integrity
 
 # Production builds
-# dist/  # Temporarily including dist for deployment
+dist/
 build/
 
 # Environment variables
@@ -70,7 +70,7 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
+# public  ← do NOT ignore public/ — static assets needed for build
 
 # Storybook build outputs
 .out
