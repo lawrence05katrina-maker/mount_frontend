@@ -22,7 +22,6 @@ import {
   Train,
   Car
 } from 'lucide-react';
-import ContactApi from '../../../api/contactApi';
 import { toast } from 'sonner';
 
 interface ContactInfo {
@@ -68,7 +67,7 @@ export const AdminContactPage: React.FC = () => {
     social_media: {
       website: 'https://www.devasahayammountshrine.com',
       facebook: 'https://www.facebook.com/saintdevasahayam',
-      youtube: 'https://www.youtube.com/@SaintDevasahayamShrine',
+      youtube: 'https://youtube.com/@st.devasahayamshrine',
       instagram: 'https://www.instagram.com/st.devasahayamshrine/'
     },
     transportation_info: {
@@ -117,7 +116,7 @@ export const AdminContactPage: React.FC = () => {
           social_media: response.data.social_media || {
             website: 'https://www.devasahayammountshrine.com',
             facebook: 'https://www.facebook.com/saintdevasahayam', 
-            youtube: 'https://www.youtube.com/@SaintDevasahayamShrine', 
+            youtube: 'https://youtube.com/@st.devasahayamshrine', 
             instagram: 'https://www.instagram.com/st.devasahayamshrine/'
           },
           transportation_info: response.data.transportation_info || {
@@ -435,7 +434,7 @@ export const AdminContactPage: React.FC = () => {
                     <Input
                       value={formData.social_media.youtube}
                       onChange={(e) => updateFormData('social_media.youtube', e.target.value)}
-                      placeholder="https://www.youtube.com/@SaintDevasahayamShrine"
+                      placeholder="https://youtube.com/@st.devasahayamshrine"
                       className="border-green-200 focus:border-green-400"
                     />
                   </div>

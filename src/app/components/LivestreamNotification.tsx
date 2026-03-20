@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X, Radio, Clock, Users, Play } from 'lucide-react';
+import axios from 'axios';
+import { BASE_URL } from '../../config/apiConfig';
 import { useLanguage } from '../context/LanguageContext';
-import { livestreamApi } from '../../api/livestreamApi';
 
 interface LivestreamData {
   id: number;
@@ -151,17 +152,17 @@ export const LivestreamNotification: React.FC = () => {
     const checkLivestreams = async () => {
       try {
         // Check for active livestream
-        const activeResponse = await livestreamApi.getActive();
-        if (activeResponse.success && activeResponse.data) {
-          setActiveStream(activeResponse.data);
+        const activeResponse = await axios.get(`${BASE_URL}/bind/livestream/active`);
+        if (activeResponse.data.success && activeResponse.data.data) {
+          setActiveStream(activeResponse.data.data);
           setIsVisible(true);
           return;
         }
 
         // Check for upcoming livestream (within next 30 minutes)
-        const upcomingResponse = await livestreamApi.getUpcoming();
-        if (upcomingResponse.success && upcomingResponse.data.length > 0) {
-          const nextStream = upcomingResponse.data[0];
+        const upcomingResponse = await axios.get(`${BASE_URL}/bind/livestream/upcoming`);
+        if (upcomingResponse.data.success && upcomingResponse.data.data.length > 0) {
+          const nextStream = upcomingResponse.data.data[0];
           const scheduledTime = new Date(nextStream.scheduled_at);
           const now = new Date();
           const timeDiff = scheduledTime.getTime() - now.getTime();

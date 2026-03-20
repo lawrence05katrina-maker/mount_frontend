@@ -3,7 +3,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { MapPin, Phone, Mail, Clock, Navigation, Bus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useLanguage } from '../context/LanguageContext';
-import ContactApi from '../../api/contactApi';
 
 interface ContactInfo {
   id: number;
@@ -43,7 +42,7 @@ const DEFAULT_CONTACT_INFO: ContactInfo = {
   social_media: {
     website: 'https://www.devasahayammountshrine.com',
     facebook: 'https://www.facebook.com/saintdevasahayam',
-    youtube: 'https://www.youtube.com/@SaintDevasahayamShrine',
+    youtube: 'https://youtube.com/@st.devasahayamshrine',
     instagram: 'https://www.instagram.com/st.devasahayamshrine/'
   },
   transportation_info: {
@@ -66,9 +65,7 @@ const DEFAULT_CONTACT_INFO: ContactInfo = {
 
 export const ContactPage: React.FC = () => {
   const { language, t } = useLanguage();
-  const [contactInfo, setContactInfo] = useState<ContactInfo>(DEFAULT_CONTACT_INFO);
-  const [loading, setLoading] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [contactInfo] = useState<ContactInfo>(DEFAULT_CONTACT_INFO);
   const [isVisible, setIsVisible] = useState(false);
 
   // Tamil font size classes
@@ -89,39 +86,8 @@ export const ContactPage: React.FC = () => {
     setIsVisible(true);
   }, []);
 
-
   const MAP_EMBED_URL =
     "https://www.google.com/maps?q=8.240166189309809,77.52512889748944&z=16&output=embed";
-
-
-
-  // const getDirectionsUrl = () => {
-  //   return "https://www.bing.com/maps?&mepi=0~Directions~Embedded~Direction_Button&ty=0&rtp=pos.8.241209030151367_77.52458953857422__St.%20Devasahayam%20Mount__e_~&mode=d&v=2&sV=1";
-  // };
-
-  useEffect(() => {
-
-    const loadContactInfo = async () => {
-      try {
-        setLoading(true);
-        const response = await ContactApi.getContactInfo();
-
-        if (response.success && response.data) {
-          setContactInfo(response.data);
-          setDataLoaded(true);
-        }
-      } catch (error) {
-        console.error('Error loading contact info:', error);
-
-      } finally {
-        setLoading(false);
-      }
-    };
-
-
-    const timer = setTimeout(loadContactInfo, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen py-8 sm:py-16 px-4 bg-gray-50 pb-4 sm:pb-8">
@@ -308,7 +274,7 @@ export const ContactPage: React.FC = () => {
                 <span className={getTamilClass("hidden sm:block text-sm text-gray-700")}>{t('contact.facebook')}</span>
               </a>
               <a
-                href={contactInfo.social_media?.youtube || 'https://www.youtube.com/@SaintDevasahayamShrine'}
+                href={contactInfo.social_media?.youtube || 'https://youtube.com/@st.devasahayamshrine'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-col items-center gap-1 sm:gap-2 p-1 sm:p-3 rounded-lg hover:bg-green-50 transition-colors group animate-float"

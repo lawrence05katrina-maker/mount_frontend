@@ -6,10 +6,9 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { Badge } from '../components/ui/badge';
 import { LivestreamNotification } from '../components/LivestreamNotification';
 import { useLanguage } from '../context/LanguageContext';
-import { getActiveAnnouncements } from '../../api/announcementApi';
-import ManagementApi from '../../api/managementApi';
 import { Calendar, Heart, Send, Users } from 'lucide-react';
 import { MdPhoneInTalk } from "react-icons/md";
+import { BASE_URL } from '../../config/apiConfig';
 
 export const HomePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -36,51 +35,48 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     const loadAnnouncements = async () => {
       try {
-        const response = await getActiveAnnouncements();
-        if (response.data.success) {
-          setAnnouncements(response.data.data);
+        const res = await fetch(`${BASE_URL}/bind/announcements`);
+        const data = await res.json();
+        if (data.success) {
+          setAnnouncements(data.data);
         }
       } catch (error) {
         console.error('Error loading announcements:', error);
       }
     };
-
     loadAnnouncements();
   }, []);
 
-  // Load management team from API
-  useEffect(() => {
-    const loadManagementTeam = async () => {
-      try {
-        setManagementLoading(true);
-        const response = await ManagementApi.getAllActive();
-        if (response && response.success) {
-          setManagementMembers(response.data || []);
-        } else {
-          console.warn('Management API returned unsuccessful response:', response);
-          setManagementMembers([]);
-        }
-      } catch (error) {
-        console.error('Error loading management team:', error);
+
+
+useEffect(() => {
+  const loadManagementTeam = async () => {
+    try {
+      setManagementLoading(true);
+      const res  = await fetch(`${BASE_URL}/bind/management`);
+      const data = await res.json();
+      if (data.success) {
+        setManagementMembers(data.data || []);
+      } else {
         setManagementMembers([]);
-      } finally {
-        setManagementLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error loading management team:', error);
+      setManagementMembers([]);
+    } finally {
+      setManagementLoading(false);
+    }
+  };
 
-    // Add a small delay to ensure backend is ready
-    const timer = setTimeout(() => {
-      loadManagementTeam();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const timer = setTimeout(() => { loadManagementTeam(); }, 500);
+  return () => clearTimeout(timer);
+}, []);
 
   // Title animation
   useEffect(() => {
     const titleInterval = setInterval(() => {
       setTitleAnimating(true);
-      
+
       setTimeout(() => {
         setCurrentTitleIndex((prevIndex) => {
           const nextIndex = (prevIndex + 1) % heroTitles.length;
@@ -99,23 +95,15 @@ export const HomePage: React.FC = () => {
     console.error('Video failed to load');
   };
 
-  // Helper function to get full image URL
- const getImageUrl = (imageUrl: string | null | undefined): string | null => {
+
+const getImageUrl = (imageUrl: string | null | undefined): string | null => {
   if (!imageUrl) return null;
-
-  // Already full URL (Cloudinary, S3, etc.)
-  if (imageUrl.startsWith('http')) {
-    return imageUrl;
-  }
-
-  // Backend uploads folder
+  if (imageUrl.startsWith('http')) return imageUrl;
+  if (imageUrl.startsWith('/api')) return `${BASE_URL.replace('/api', '')}${imageUrl}`;
   if (imageUrl.startsWith('/uploads')) {
-    const backendUrl =
-      import.meta.env.VITE_BACKEND_URL || window.location.origin;
-
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
     return `${backendUrl}${imageUrl}`;
   }
-
   return imageUrl;
 };
 
@@ -538,7 +526,7 @@ export const HomePage: React.FC = () => {
           }
         }
       `}</style>
-      
+
       <LivestreamNotification />
 
       {/* Full-Screen Hero Section with Background Video */}
@@ -557,14 +545,14 @@ export const HomePage: React.FC = () => {
             <source src="https://res.cloudinary.com/decddzq7e/video/upload/v1770099308/lv_0_20260203114036_uwnlie.mp4" type="video/mp4" />
           </video>
         )}
-        
+
 
         <div className="hero-fallback" style={{ display: videoError ? 'block' : 'none' }}></div>
-        
-       
+
+
         <div className="hero-overlay"></div>
-        
-       
+
+
         <div className="hero-content">
           <h1 className={`hero-title ${titleAnimating ? 'fade-out' : 'fade-in'} ${isTamil ? 'tamil' : ''}`}>
             {heroTitles[currentTitleIndex]}
@@ -650,7 +638,7 @@ export const HomePage: React.FC = () => {
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className={`text-3xl font-semibold text-green-800 mb-10 ${isTamil ? 'tamil-heading' : ''} ${isVisible ? 'premium-fadeInUp premium-stagger-1' : 'opacity-0'}`}>{t('management.title')}</h2>
-          
+
           {managementLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[1, 2, 3, 4].map((index) => (
@@ -695,7 +683,7 @@ export const HomePage: React.FC = () => {
                               }}
                             />
                           ) : null}
-                          <div 
+                          <div
                             className={`w-full h-56 bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center rounded-t-lg ${getImageUrl(member.image_url) ? 'hidden' : 'flex'}`}
                           >
                             <Users className="w-16 h-16 text-green-400" />
@@ -749,7 +737,7 @@ export const HomePage: React.FC = () => {
                                   }}
                                 />
                               ) : null}
-                              <div 
+                              <div
                                 className={`w-full h-56 bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center rounded-t-lg ${getImageUrl(member.image_url) ? 'hidden' : 'flex'}`}
                               >
                                 <Users className="w-16 h-16 text-green-400" />
@@ -787,7 +775,7 @@ export const HomePage: React.FC = () => {
                             }}
                           />
                         ) : null}
-                        <div 
+                        <div
                           className={`w-full h-56 bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center rounded-t-lg ${getImageUrl(member.image_url) ? 'hidden' : 'flex'}`}
                         >
                           <Users className="w-16 h-16 text-green-400" />
@@ -811,7 +799,7 @@ export const HomePage: React.FC = () => {
               <p className="text-gray-500 text-lg">Management information will be available soon.</p>
             </div>
           )}
-          
+
           <div className={`mt-10 ${isVisible ? 'premium-slideUp premium-stagger-6' : 'opacity-0'}`}>
             <Button
               variant="outline"
@@ -837,7 +825,7 @@ export const HomePage: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span>{t(announcement.title)}</span>
-                      {(announcement.priority === 'urgent' || announcement.priority === 'high') && (
+                      {(announcement.priority === 'Urgent' || announcement.priority === 'High') && (
                         <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
                           Important
                         </span>
@@ -942,53 +930,53 @@ export const HomePage: React.FC = () => {
       <div className="bg-green-50 py-16 pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8 pb-16">
-          <Link to="/mass-booking">
-            <Card className={`text-center border-blue-200 hover:shadow-lg transition-shadow cursor-pointer premium-card-hover ${isVisible ? 'premium-scaleIn premium-stagger-1' : 'opacity-0'}`}>
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 premium-float">
-                  <Calendar className="w-8 h-8 text-green-600" />
-                </div>
-                <CardTitle className={`${isTamil ? 'tamil-card-title' : ''}`}>{t('cta.bookMass.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className={`text-gray-700 ${isTamil ? 'tamil-text' : ''}`}>
-                  {t('cta.bookMass.description')}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+            <Link to="/mass-booking">
+              <Card className={`text-center border-blue-200 hover:shadow-lg transition-shadow cursor-pointer premium-card-hover ${isVisible ? 'premium-scaleIn premium-stagger-1' : 'opacity-0'}`}>
+                <CardHeader>
+                  <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 premium-float">
+                    <Calendar className="w-8 h-8 text-green-600" />
+                  </div>
+                  <CardTitle className={`${isTamil ? 'tamil-card-title' : ''}`}>{t('cta.bookMass.title')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className={`text-gray-700 ${isTamil ? 'tamil-text' : ''}`}>
+                    {t('cta.bookMass.description')}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Link to="/donations">
-            <Card className={`text-center border-blue-200 hover:shadow-lg transition-shadow cursor-pointer premium-card-hover ${isVisible ? 'premium-scaleIn premium-stagger-2' : 'opacity-0'}`}>
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 premium-float" style={{animationDelay: '0.5s'}}>
-                  <Heart className="w-8 h-8 text-green-600" />
-                </div>
-                <CardTitle className={`${isTamil ? 'tamil-card-title' : ''}`}>{t('cta.donation.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className={`text-gray-700 ${isTamil ? 'tamil-text' : ''}`}>
-                  {t('cta.donation.description')}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+            <Link to="/donations">
+              <Card className={`text-center border-blue-200 hover:shadow-lg transition-shadow cursor-pointer premium-card-hover ${isVisible ? 'premium-scaleIn premium-stagger-2' : 'opacity-0'}`}>
+                <CardHeader>
+                  <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 premium-float" style={{ animationDelay: '0.5s' }}>
+                    <Heart className="w-8 h-8 text-green-600" />
+                  </div>
+                  <CardTitle className={`${isTamil ? 'tamil-card-title' : ''}`}>{t('cta.donation.title')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className={`text-gray-700 ${isTamil ? 'tamil-text' : ''}`}>
+                    {t('cta.donation.description')}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Link to="/prayer-request">
-            <Card className={`text-center border-green-200 hover:shadow-lg transition-shadow cursor-pointer premium-card-hover ${isVisible ? 'premium-scaleIn premium-stagger-3' : 'opacity-0'}`}>
-              <CardHeader>
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 premium-float" style={{animationDelay: '1s'}}>
-                  <Send className="w-8 h-8 text-green-600" />
-                </div>
-                <CardTitle className={`${isTamil ? 'tamil-card-title' : ''}`}>{t('cta.prayer.title')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className={`text-gray-700 ${isTamil ? 'tamil-text' : ''}`}>
-                  {t('cta.prayer.description')}
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
+            <Link to="/prayer-request">
+              <Card className={`text-center border-green-200 hover:shadow-lg transition-shadow cursor-pointer premium-card-hover ${isVisible ? 'premium-scaleIn premium-stagger-3' : 'opacity-0'}`}>
+                <CardHeader>
+                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 premium-float" style={{ animationDelay: '1s' }}>
+                    <Send className="w-8 h-8 text-green-600" />
+                  </div>
+                  <CardTitle className={`${isTamil ? 'tamil-card-title' : ''}`}>{t('cta.prayer.title')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className={`text-gray-700 ${isTamil ? 'tamil-text' : ''}`}>
+                    {t('cta.prayer.description')}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>

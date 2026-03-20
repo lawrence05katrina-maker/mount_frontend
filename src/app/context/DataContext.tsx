@@ -149,7 +149,7 @@ const defaultSettings: SiteSettings = {
   socialMedia: {
     website: 'https://www.devasahayammountshrine.com',
     facebook: 'https://www.facebook.com/saintdevasahayam',
-    youtube: 'https://www.youtube.com/@SaintDevasahayamShrine',
+    youtube: 'https://youtube.com/@st.devasahayamshrine',
     instagram: 'https://www.instagram.com/st.devasahayamshrine/',
   },
 };
@@ -181,7 +181,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (storedPrayers) setPrayerRequests(JSON.parse(storedPrayers));
         if (storedTestimonies) setTestimonies(JSON.parse(storedTestimonies));
         if (storedGallery) setGallery(JSON.parse(storedGallery));
-        if (storedSettings) setSettings(JSON.parse(storedSettings));
+        if (storedSettings) {
+          const parsedSettings = JSON.parse(storedSettings);
+          // Always override social URLs from defaults to prevent stale cached values
+          parsedSettings.socialMedia = { ...parsedSettings.socialMedia, ...defaultSettings.socialMedia };
+          localStorage.setItem('shrine_settings', JSON.stringify(parsedSettings));
+          setSettings(parsedSettings);
+        }
         else {
           // Initialize with sample data
           const sampleAnnouncements: Announcement[] = [

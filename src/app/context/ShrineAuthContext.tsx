@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AdminApi from '../../api/adminApi';
 
 interface ShrineAuthContextType {
   isAuthenticated: boolean;
@@ -21,23 +20,17 @@ export const ShrineAuthProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Only verify token if user appears to be authenticated
-        if (AdminApi.isAuthenticated()) {
-          const response = await AdminApi.verifyToken();
-          if (response.success) {
-            setIsAuthenticated(true);
-            setAdmin(AdminApi.getCurrentAdmin());
-          } else {
-            setIsAuthenticated(false);
-            setAdmin(null);
-          }
+        const token = localStorage.getItem('admin_token');
+        const savedAdmin = localStorage.getItem('admin_user');
+        
+        if (token && savedAdmin) {
+          setIsAuthenticated(true);
+          setAdmin(JSON.parse(savedAdmin));
         } else {
-          // User is not authenticated, skip verification
           setIsAuthenticated(false);
           setAdmin(null);
         }
       } catch (error) {
-        // Silently handle auth errors on initialization
         setIsAuthenticated(false);
         setAdmin(null);
       } finally {
@@ -51,11 +44,14 @@ export const ShrineAuthProvider: React.FC<{ children: ReactNode }> = ({ children
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await AdminApi.login({ username, password });
       
-      if (response.success) {
+      // Mock login for development
+      if (username === 'admin' && password === 'admin') {
+        const mockAdmin = { id: 1, username: 'admin', email: 'admin@shrine.com' };
+        localStorage.setItem('admin_token', 'mock-token');
+        localStorage.setItem('admin_user', JSON.stringify(mockAdmin));
         setIsAuthenticated(true);
-        setAdmin(response.data.admin);
+        setAdmin(mockAdmin);
         return true;
       } else {
         setIsAuthenticated(false);
@@ -72,24 +68,26 @@ export const ShrineAuthProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
-  const logout = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      await AdminApi.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsAuthenticated(false);
-      setAdmin(null);
-      setLoading(false);
-    }
-  };
+ const logout = async (): Promise<void> => {
+  try {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    setIsAuthenticated(false);
+    setAdmin(null);
+    window.location.href = '/admin/login';
+  } catch (error) {
+    console.error('Logout error:', error);
+    window.location.href = '/admin/login';
+  }
+};
 
   const verifyToken = async (): Promise<boolean> => {
     try {
-      const response = await AdminApi.verifyToken();
-      if (response.success) {
-        setAdmin(response.data.admin);
+      const token = localStorage.getItem('admin_token');
+      const savedAdmin = localStorage.getItem('admin_user');
+      
+      if (token && savedAdmin) {
+        setAdmin(JSON.parse(savedAdmin));
         setIsAuthenticated(true);
         return true;
       } else {
@@ -98,7 +96,6 @@ export const ShrineAuthProvider: React.FC<{ children: ReactNode }> = ({ children
         return false;
       }
     } catch (error) {
-      // Silently handle verification errors
       setIsAuthenticated(false);
       setAdmin(null);
       return false;

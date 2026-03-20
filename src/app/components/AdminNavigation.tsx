@@ -26,15 +26,11 @@ export const AdminNavigation: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      navigate('/');
-    }
-  };
+ const handleLogout = async () => {
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  window.location.href = '/admin/login';
+};
 
   return (
     <>

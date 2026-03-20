@@ -4,26 +4,19 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { useShrineAuth } from '../context/ShrineAuthContext';
 import { Lock, User, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
+import { BASE_URL } from '../../config/apiConfig';
 
 export const AdminLoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { login, loading, isAuthenticated } = useShrineAuth();
   const [formData, setFormData] = useState({
+  
     username: '',
     password: '',
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Redirect if already authenticated
-  React.useEffect(() => {
-    if (isAuthenticated && !loading) {
-      navigate('/admin/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,18 +24,21 @@ export const AdminLoginPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const success = await login(formData.username, formData.password);
-      
-      if (success) {
+      const res = await axios.post(`${BASE_URL}/auth/login`, {
+        username: formData.username,
+        password: formData.password,
+      });
+
+      if (res.data.success) {
+        localStorage.setItem('admin_token', res.data.token);
+        localStorage.setItem('admin_user', JSON.stringify(res.data.admin));
         toast.success('Login successful!');
-        navigate('/admin/dashboard');
-      } else {
-        setError('Invalid username or password');
-        toast.error('Invalid credentials');
+        
+        window.location.href = '/admin/dashboard';
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('An error occurred during login. Please try again.');
+
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid username or password');
       toast.error('Login failed');
     } finally {
       setIsSubmitting(false);
@@ -55,17 +51,6 @@ export const AdminLoginPage: React.FC = () => {
       [e.target.name]: e.target.value,
     }));
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-green-50 to-green-100">
-        <div className="flex items-center gap-2 text-green-700">
-          <Loader2 className="w-6 h-6 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-green-50 to-green-100">
@@ -121,8 +106,8 @@ export const AdminLoginPage: React.FC = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-green-700 hover:bg-green-800 disabled:opacity-50"
               disabled={isSubmitting}
             >

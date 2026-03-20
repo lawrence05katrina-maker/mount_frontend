@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useShrineData } from '../../context/ShrineDataContext';
 import { IndianRupee, Calendar, MessageCircle, Star, TrendingUp } from 'lucide-react';
-import { getDonationStats } from '../../../api/donationApi';
 
 interface DonationStats {
   total_donations: number;

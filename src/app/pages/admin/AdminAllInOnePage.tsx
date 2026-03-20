@@ -6,15 +6,8 @@ import { Textarea } from '../../components/ui/textarea';
 import { Button } from '../../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useShrineData } from '../../context/ShrineDataContext';
-import { Youtube, Image as ImageIcon, MapPin, MessageCircle, FileText, Check, X, Plus, Trash2 } from 'lucide-react';
+import { Video, Image as ImageIcon, MessageCircle, FileText, Check, X, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllPrayers, deletePrayer } from "../../../api/prayerApi";
-import {
-  getPendingTestimonies,
-  updateTestimonyStatus,
-} from "../../../api/testimonyApi";
-
-
 
 export const AdminAllInOnePage: React.FC = () => {
   const {
@@ -24,7 +17,6 @@ export const AdminAllInOnePage: React.FC = () => {
     addGalleryItem,
     deleteGalleryItem,
     testimonies,
-    updateTestimonyStatus,
     announcements,
     addAnnouncement,
     deleteAnnouncement,
@@ -89,54 +81,37 @@ export const AdminAllInOnePage: React.FC = () => {
 
   const pendingTestimonies = testimonies.filter(t => t.status === 'pending');
 
-  // Prayer Request
+  // Prayer Request - API removed, using mock data
   useEffect(() => {
-    fetchPrayers();
+    // fetchPrayers(); // API call removed
   }, []);
 
   const fetchPrayers = async () => {
-    try {
-      const res = await getAllPrayers();
-      setPrayerRequests(res.data);
-    } catch (error) {
-      console.error("Failed to fetch prayers");
-    }
+    // API integration removed
+    console.log("Prayer API not integrated");
   };
 
   const handleDeletePrayer = async (id: number) => {
-    try {
-      await deletePrayer(id);
-      toast.success("Prayer deleted");
-      fetchPrayers();
-    } catch (error) {
-      toast.error("Failed to delete prayer");
-    }
+    // API integration removed
+    toast.info("Prayer API not integrated");
   };
 
-  // Testimonies
+  // Testimonies - API removed, using context data
   useEffect(() => {
-    fetchPendingTestimonies();
+    // fetchPendingTestimonies(); // API call removed
   }, []);
 
- const fetchPendingTestimonies = async () => {
-  try {
-    await getPendingTestimonies(); 
-  } catch (error) {
-    console.error("Failed to load testimonies");
-  }
-};
+  const fetchPendingTestimonies = async () => {
+    // API integration removed
+    console.log("Testimony API not integrated");
+  };
 
   const handleStatusChange = async (
-    id: number,
+    id: string,
     status: "approved" | "rejected"
   ) => {
-    try {
-      await updateTestimonyStatus(id, status);
-      toast.success(`Testimony ${status}`);
-      fetchPendingTestimonies(); // refresh list
-    } catch (error) {
-      toast.error("Failed to update testimony status");
-    }
+    // API integration removed - using context instead
+    toast.info("Testimony API not integrated");
   };
 
 
@@ -152,7 +127,7 @@ export const AdminAllInOnePage: React.FC = () => {
         <Tabs defaultValue="stream" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
             <TabsTrigger value="stream">
-              <Youtube className="w-4 h-4 mr-2" />
+              <Video className="w-4 h-4 mr-2" />
               Stream
             </TabsTrigger>
             <TabsTrigger value="gallery">
@@ -225,7 +200,7 @@ export const AdminAllInOnePage: React.FC = () => {
                                 <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                                  <Youtube className="w-12 h-12 text-white" />
+                                  <Video className="w-12 h-12 text-white" />
                                 </div>
                               )}
                             </div>

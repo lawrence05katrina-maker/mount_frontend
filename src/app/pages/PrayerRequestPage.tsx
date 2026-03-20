@@ -4,21 +4,20 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { useShrineData } from '../context/ShrineDataContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Send, CheckCircle, Heart, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { createPrayer } from '../../api/prayerApi';
+import { BASE_URL } from '../../config/apiConfig';
 
 export const PrayerRequestPage: React.FC = () => {
-  const { addPrayerRequest } = useShrineData();
+
   const { language, t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    prayer: '',
+    prayer_intention: '',   // ← changed from 'prayer' to match backend
   });
 
   // Tamil font size classes
@@ -40,37 +39,40 @@ export const PrayerRequestPage: React.FC = () => {
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!formData.name || !formData.prayer) {
-    toast.error("Please fill in all required fields");
-    return;
-  }
+    if (!formData.name || !formData.prayer_intention) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
 
-  try {
-    // Send 'prayer' field to match database column
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      prayer: formData.prayer
-    };
-    
-    await createPrayer(payload);
+    try {
+      const res = await fetch(`${BASE_URL}/add/prayer-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email || null,
+          prayer_intention: formData.prayer_intention,
+        }),
+      });
 
-    toast.success("Prayer request submitted successfully!");
-    setSubmitted(true);
+      const data = await res.json();
 
-    setFormData({
-      name: "",
-      email: "",
-      prayer: "",
-    });
-  } catch (error) {
-    console.error('Prayer submission error:', error);
-    toast.error("Failed to submit prayer. Please try again.");
-  }
-};
+      if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
 
+      if (data.success) {
+        toast.success("Prayer request submitted successfully!");
+        setSubmitted(true);
+        setFormData({ name: '', email: '', prayer_intention: '' });
+      } else {
+        throw new Error(data.message || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Prayer submission error:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to submit prayer. Please try again.");
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({
@@ -105,7 +107,7 @@ export const PrayerRequestPage: React.FC = () => {
             <Button
               onClick={() => {
                 setSubmitted(false);
-                setFormData({ name: '', email: '', prayer: '' });
+                setFormData({ name: '', email: '', prayer_intention: '' });
               }}
               className={getTamilButtonClass("bg-gradient-to-r from-green-700 to-emerald-700 hover:from-green-800 hover:to-emerald-800 success-button transform hover:scale-105 transition-all duration-200")}
             >
@@ -359,7 +361,7 @@ export const PrayerRequestPage: React.FC = () => {
           }
         }
       `}</style>
-      
+
       <div className="max-w-4xl mx-auto">
         {/* Animated Header */}
         <div className={`text-center mb-8 sm:mb-12 ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`}>
@@ -367,9 +369,9 @@ export const PrayerRequestPage: React.FC = () => {
             <div className="relative">
               <Heart className={`w-8 h-8 sm:w-10 sm:h-10 text-green-700 ${isVisible ? 'animate-heartBeat' : ''}`} />
               <div className="floating-hearts">
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 floating-heart" style={{animationDelay: '0s'}} />
-                <Heart className="w-2 h-2 sm:w-3 sm:h-3 text-green-500 floating-heart" style={{animationDelay: '1s'}} />
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 floating-heart" style={{animationDelay: '2s'}} />
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 floating-heart" style={{ animationDelay: '0s' }} />
+                <Heart className="w-2 h-2 sm:w-3 sm:h-3 text-green-500 floating-heart" style={{ animationDelay: '1s' }} />
+                <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 floating-heart" style={{ animationDelay: '2s' }} />
               </div>
             </div>
             <h1 className={getTamilHeadingClass("prayer-title text-2xl sm:text-4xl font-bold bg-gradient-to-r from-green-800 to-emerald-700 bg-clip-text text-transparent")}>
@@ -431,9 +433,9 @@ export const PrayerRequestPage: React.FC = () => {
                       {t('prayer.request.intention')} <span className='text-red-500'>*</span>
                     </Label>
                     <Textarea
-                      id="prayer"
-                      name="prayer"
-                      value={formData.prayer}
+                      id="prayer_intention"
+                      name="prayer_intention"
+                      value={formData.prayer_intention}
                       onChange={handleChange}
                       placeholder={t('prayer.request.intention.placeholder')}
                       rows={6}
@@ -445,8 +447,8 @@ export const PrayerRequestPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className={`prayer-submit-button ${getTamilButtonClass('')} w-full font-semibold bg-gradient-to-r from-green-700 to-emerald-700 hover:from-green-800 hover:to-emerald-800 transform hover:scale-105 transition-all duration-200 animate-fadeInUp`}
                   >
                     <Send className="mr-2 w-5 h-5 animate-heartBeat" />
@@ -470,15 +472,15 @@ export const PrayerRequestPage: React.FC = () => {
                   {t('prayer.request.daily.times.subtitle')}
                 </p>
                 <div className="space-y-2">
-                  <div className={`flex justify-between border-l-4 border-green-300 pl-3 sm:pl-4 py-2 rounded-r-lg bg-green-50/50 hover:bg-green-50 transition-colors ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`} style={{animationDelay: '0.8s'}}>
+                  <div className={`flex justify-between border-l-4 border-green-300 pl-3 sm:pl-4 py-2 rounded-r-lg bg-green-50/50 hover:bg-green-50 transition-colors ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`} style={{ animationDelay: '0.8s' }}>
                     <span className={getTamilClass("prayer-sidebar-text")}>{t('prayer.request.morning.mass')}</span>
                     <span className="prayer-sidebar-text">{t('prayer.request.morning.6am')}</span>
                   </div>
-                  <div className={`flex justify-between border-l-4 border-green-300 pl-3 sm:pl-4 py-2 rounded-r-lg bg-green-50/50 hover:bg-green-50 transition-colors ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`} style={{animationDelay: '0.9s'}}>
+                  <div className={`flex justify-between border-l-4 border-green-300 pl-3 sm:pl-4 py-2 rounded-r-lg bg-green-50/50 hover:bg-green-50 transition-colors ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`} style={{ animationDelay: '0.9s' }}>
                     <span className={getTamilClass("prayer-sidebar-text")}>{t('prayer.request.morning.mass')}</span>
                     <span className="prayer-sidebar-text">{t('prayer.request.morning.9am')}</span>
                   </div>
-                  <div className={`flex justify-between border-l-4 border-green-300 pl-3 sm:pl-4 py-2 rounded-r-lg bg-green-50/50 hover:bg-green-50 transition-colors ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`} style={{animationDelay: '1.0s'}}>
+                  <div className={`flex justify-between border-l-4 border-green-300 pl-3 sm:pl-4 py-2 rounded-r-lg bg-green-50/50 hover:bg-green-50 transition-colors ${isVisible ? 'animate-fadeInUp' : 'opacity-0'}`} style={{ animationDelay: '1.0s' }}>
                     <span className={getTamilClass("prayer-sidebar-text")}>{t('prayer.request.evening.mass')}</span>
                     <span className="prayer-sidebar-text">{t('prayer.request.evening.6pm')}</span>
                   </div>

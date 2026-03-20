@@ -1,7 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getApprovedTestimonies } from '../../api/testimonyApi';
-import { getActiveAnnouncements, createAnnouncement, deleteAnnouncement, updateAnnouncement } from '../../api/announcementApi';
-import GalleryApi from '../../api/galleryApi';
 
 // Types
 export interface Donation {
@@ -133,7 +130,7 @@ const initialSiteContent: SiteContent = {
   massBookingAmount: 500,
   websiteUrl: 'https://www.devasahayammountshrine.com',
   facebookUrl: 'https://www.facebook.com/saintdevasahayam',
-  youtubeUrl: 'https://www.youtube.com/@SaintDevasahayamShrine',
+  youtubeUrl: 'https://youtube.com/@st.devasahayamshrine',
   instagramUrl: 'https://www.instagram.com/st.devasahayamshrine/',
 };
 
@@ -179,133 +176,36 @@ export const ShrineDataProvider: React.FC<{ children: ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [testimonies, setTestimonies] = useState<Testimony[]>(() => {
+    const saved = localStorage.getItem('shrine_testimonies');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-  // Fetch testimonies from API
-  useEffect(() => {
-    const fetchTestimonies = async () => {
-      try {
-        const response = await getApprovedTestimonies();
-        if (response.data.success) {
-          const apiTestimonies = response.data.data.map((item: any) => ({
-            id: item.id.toString(),
-            name: item.name,
-            testimony: item.testimony,
-            date: item.created_at,
-            status: item.status
-          }));
-          setTestimonies(apiTestimonies);
-        }
-      } catch (error) {
-        console.error('Error fetching testimonies:', error);
-        // Fallback to localStorage if API fails
-        const saved = localStorage.getItem('shrine_testimonies');
-        if (saved) {
-          setTestimonies(JSON.parse(saved));
-        }
-      }
-    };
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
+    const saved = localStorage.getItem('shrine_gallery');
+    return saved ? JSON.parse(saved) : [];
+  });
 
-    fetchTestimonies();
-  }, []);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => {
+    const saved = localStorage.getItem('shrine_announcements');
+    return saved ? JSON.parse(saved) : initialAnnouncements;
+  });
 
-  const [gallery, setGallery] = useState<GalleryItem[]>([]);
-
-  // Fetch gallery from API
-  useEffect(() => {
-    const fetchGallery = async () => {
-      try {
-        const response = await GalleryApi.getPublicGallery();
-        if (response.success) {
-          const apiGallery = response.data?.map((item: any) => ({
-            id: item.id.toString(),
-            type: item.file_type || 'image',
-            url: item.image_url,
-            title: item.title,
-            category: item.category || 'general',
-            date: item.created_at
-          })) || [];
-          setGallery(apiGallery);
-        }
-      } catch (error) {
-        console.error('Error fetching gallery:', error);
-        // Fallback to localStorage if API fails
-        const saved = localStorage.getItem('shrine_gallery');
-        if (saved) {
-          setGallery(JSON.parse(saved));
-        }
-      }
-    };
-
-    fetchGallery();
-  }, []);
-
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-
-  // Fetch announcements from API
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        const response = await getActiveAnnouncements();
-        if (response.data.success) {
-          const apiAnnouncements = response.data.data.map((item: any) => ({
-            id: item.id.toString(),
-            title: item.title,
-            content: item.content,
-            date: item.created_at,
-            priority: item.priority === 'urgent' ? 'high' : item.priority
-          }));
-          setAnnouncements(apiAnnouncements);
-        }
-      } catch (error) {
-        console.error('Error fetching announcements:', error);
-        // Fallback to localStorage if API fails
-        const saved = localStorage.getItem('shrine_announcements');
-        if (saved) {
-          setAnnouncements(JSON.parse(saved));
-        } else {
-          setAnnouncements(initialAnnouncements);
-        }
-      }
-    };
-
-    fetchAnnouncements();
-  }, []);
-
-  const [donationPurposes, setDonationPurposes] = useState<DonationPurpose[]>([]);
-
-  // Fetch donation purposes from API
-  useEffect(() => {
-    const fetchDonationPurposes = async () => {
-      try {
-        const response = await fetch('/api/donations/purposes');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            const apiPurposes = data.data.map((item: any) => ({
-              id: item.id.toString(),
-              name: item.name,
-              description: item.description
-            }));
-            setDonationPurposes(apiPurposes);
-          }
-        } else {
-          // Fallback to initial purposes if API fails
-          setDonationPurposes(initialDonationPurposes);
-        }
-      } catch (error) {
-        console.error('Error fetching donation purposes:', error);
-        // Fallback to initial purposes if API fails
-        setDonationPurposes(initialDonationPurposes);
-      }
-    };
-
-    fetchDonationPurposes();
-  }, []);
+  const [donationPurposes, setDonationPurposes] = useState<DonationPurpose[]>(initialDonationPurposes);
 
   const [siteContent, setSiteContent] = useState<SiteContent>(() => {
     const saved = localStorage.getItem('shrine_site_content');
-    return saved ? JSON.parse(saved) : initialSiteContent;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Always override social URLs from defaults to prevent stale cached values
+      parsed.facebookUrl = initialSiteContent.facebookUrl;
+      parsed.youtubeUrl = initialSiteContent.youtubeUrl;
+      parsed.instagramUrl = initialSiteContent.instagramUrl;
+      parsed.websiteUrl = initialSiteContent.websiteUrl;
+      localStorage.setItem('shrine_site_content', JSON.stringify(parsed));
+      return parsed;
+    }
+    return initialSiteContent;
   });
 
   // Persist to localStorage
@@ -408,89 +308,24 @@ export const ShrineDataProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const addAnnouncement = async (announcement: Omit<Announcement, 'id' | 'date'>) => {
-    try {
-      const response = await createAnnouncement(announcement);
-      if (response.data.success) {
-        // Refresh announcements from API
-        const updatedResponse = await getActiveAnnouncements();
-        if (updatedResponse.data.success) {
-          const apiAnnouncements = updatedResponse.data.data.map((item: any) => ({
-            id: item.id.toString(),
-            title: item.title,
-            content: item.content,
-            date: item.created_at,
-            priority: item.priority === 'urgent' ? 'high' : item.priority
-          }));
-          setAnnouncements(apiAnnouncements);
-        }
-      }
-    } catch (error) {
-      console.error('Error creating announcement:', error);
-      // Fallback to local storage if API fails
-      const newAnnouncement: Announcement = {
-        ...announcement,
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-      };
-      setAnnouncements(prev => [newAnnouncement, ...prev]);
-    }
+    const newAnnouncement: Announcement = {
+      ...announcement,
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+    };
+    setAnnouncements(prev => [newAnnouncement, ...prev]);
   };
 
   const deleteAnnouncementHandler = async (id: string) => {
-    try {
-      const response = await deleteAnnouncement(id);
-      if (response.data.success) {
-        // Remove from local state immediately for better UX
-        setAnnouncements(prev => prev.filter(item => item.id !== id));
-        
-        // Refresh announcements from API to ensure consistency
-        const updatedResponse = await getActiveAnnouncements();
-        if (updatedResponse.data.success) {
-          const apiAnnouncements = updatedResponse.data.data.map((item: any) => ({
-            id: item.id.toString(),
-            title: item.title,
-            content: item.content,
-            date: item.created_at,
-            priority: item.priority === 'urgent' ? 'high' : item.priority
-          }));
-          setAnnouncements(apiAnnouncements);
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting announcement:', error);
-      // If API fails, still remove from local state as fallback
-      setAnnouncements(prev => prev.filter(item => item.id !== id));
-      throw error; // Re-throw to show error message in UI
-    }
+    setAnnouncements(prev => prev.filter(item => item.id !== id));
   };
 
   const updateAnnouncementHandler = async (id: string, updates: Partial<Announcement>) => {
-    try {
-      const response = await updateAnnouncement(id, updates);
-      if (response.data.success) {
-        // Refresh announcements from API
-        const updatedResponse = await getActiveAnnouncements();
-        if (updatedResponse.data.success) {
-          const apiAnnouncements = updatedResponse.data.data.map((item: any) => ({
-            id: item.id.toString(),
-            title: item.title,
-            content: item.content,
-            date: item.created_at,
-            priority: item.priority === 'urgent' ? 'high' : item.priority
-          }));
-          setAnnouncements(apiAnnouncements);
-        }
-      }
-    } catch (error) {
-      console.error('Error updating announcement:', error);
-      // Fallback to local storage if API fails
-      setAnnouncements(prev =>
-        prev.map(item =>
-          item.id === id ? { ...item, ...updates } : item
-        )
-      );
-      throw error; // Re-throw to show error message in UI
-    }
+    setAnnouncements(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, ...updates } : item
+      )
+    );
   };
 
   const addDonationPurpose = (purpose: Omit<DonationPurpose, 'id'>) => {
