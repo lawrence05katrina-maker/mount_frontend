@@ -543,7 +543,7 @@ const getImageUrl = (imageUrl: string | null | undefined): string | null => {
             onError={handleVideoError}
           >
             <source src="/hero.mp4" type="video/mp4" />
-            <source src="https://res.cloudinary.com/decddzq7e/video/upload/v1770099308/lv_0_20260203114036_uwnlie.mp4" type="video/mp4" />
+            {/* <source src="https://res.cloudinary.com/decddzq7e/video/upload/v1770099308/lv_0_20260203114036_uwnlie.mp4" type="video/mp4" /> */}
           </video>
         )}
 
